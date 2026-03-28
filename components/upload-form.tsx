@@ -1,18 +1,59 @@
 "use client";
+
 import { useState } from "react";
+
 export function UploadForm() {
-  const [msg,setMsg]=useState("");
-  async function submit(fd:FormData){
-    const r=await fetch("/api/upload",{method:"POST",body:fd});
-    const d=await r.json();
-    setMsg(JSON.stringify(d));
-    location.reload();
+  const [message, setMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setMessage("Uploading...");
+    setIsUploading(true);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || "Upload failed");
+        return;
+      }
+
+      setMessage(`Saved job ${data.job.id} for ${data.job.original_name}`);
+      window.location.reload();
+    } catch {
+      setMessage("Something went wrong");
+    } finally {
+      setIsUploading(false);
+    }
   }
+
   return (
-    <form action={submit}>
-      <input name="file" type="file" required />
-      <button>Upload</button>
-      <div>{msg}</div>
+    <form action={handleSubmit} className="card">
+      <h2>Upload PDF</h2>
+      <p>Send a file into your workflow and create a real tracked job.</p>
+
+      <label className="label" htmlFor="file">PDF file</label>
+      <input id="file" name="file" type="file" accept="application/pdf" className="file-input" required />
+
+      <label className="label" htmlFor="preset">Processing preset</label>
+      <select id="preset" name="preset" className="select" defaultValue="booklet">
+        <option value="booklet">Booklet</option>
+        <option value="4-up">4-up Imposition</option>
+        <option value="8-up">8-up Imposition</option>
+        <option value="numbering">Numbering / Bates</option>
+        <option value="watermark">Watermark</option>
+      </select>
+
+      <button type="submit" className="btn btn-primary" disabled={isUploading}>
+        {isUploading ? "Uploading..." : "Upload Job"}
+      </button>
+
+      {message ? <div className="notice">{message}</div> : null}
     </form>
   );
 }

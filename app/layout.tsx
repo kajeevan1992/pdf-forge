@@ -1,4 +1,15 @@
 import "./globals.css";
-export default function RootLayout({ children }: any) {
-  return <html><body>{children}</body></html>;
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "PDF Forge",
+  description: "Modern PDF production SaaS starter"
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
 }
