@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { insertJob } from "../../../../lib/db";
+
+function makeJobId() {
+  return `JOB-${Date.now()}`;
+}
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -28,11 +33,19 @@ export async function POST(request: Request) {
 
   fs.writeFileSync(filePath, buffer);
 
+  const job = {
+    id: makeJobId(),
+    filename: safeName,
+    original_name: file.name,
+    preset,
+    status: "Queued",
+    created_at: new Date().toISOString()
+  };
+
+  insertJob(job);
+
   return NextResponse.json({
     success: true,
-    filename: safeName,
-    originalName: file.name,
-    preset,
-    status: "Saved"
+    job
   });
 }
