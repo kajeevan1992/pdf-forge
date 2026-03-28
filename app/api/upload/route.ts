@@ -12,26 +12,26 @@ export async function POST(request: Request) {
   }
 
   if (file.type !== "application/pdf") {
-    return NextResponse.json({ error: "Only PDF files allowed" }, { status: 400 });
+    return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
   }
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
   const uploadDir = path.join(process.cwd(), "uploads");
-
   if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
+    fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  const filePath = path.join(uploadDir, file.name);
+  const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const filePath = path.join(uploadDir, safeName);
 
   fs.writeFileSync(filePath, buffer);
 
   return NextResponse.json({
     success: true,
-    filename: file.name,
-    path: filePath,
+    filename: safeName,
+    originalName: file.name,
     preset,
     status: "Saved"
   });
