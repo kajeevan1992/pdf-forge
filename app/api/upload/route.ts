@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { insertJob } from "../../../../lib/db";
+import { insertJob } from "../../../lib/db";
 
 function makeJobId() {
   return `JOB-${Date.now()}`;
