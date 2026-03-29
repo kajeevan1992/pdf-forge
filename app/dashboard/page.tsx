@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+import Link from "next/link";
 import { Navbar } from "../../components/navbar";
 import { UploadForm } from "../../components/upload-form";
 import { getJobs } from "../../lib/db";
@@ -54,6 +55,7 @@ export default function DashboardPage() {
                       <th>Status</th>
                       <th>Created</th>
                       <th>Download</th>
+                      <th>Workspace</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -81,6 +83,15 @@ export default function DashboardPage() {
                           ) : (
                             <span className="empty">—</span>
                           )}
+                        </td>
+                        <td>
+                          <Link
+                            href={`/impose/${job.id}`}
+                            className="btn btn-secondary"
+                            style={{ padding: "8px 12px", display: "inline-block" }}
+                          >
+                            Open
+                          </Link>
                         </td>
                       </tr>
                     ))}
