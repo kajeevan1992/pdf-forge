@@ -16,17 +16,34 @@ export function UploadForm() {
         body: formData
       });
 
-      const data = await res.json();
+      const text = await res.text();
+
+      let data: any = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text };
+      }
 
       if (!res.ok) {
-        setMessage(data.error || "Upload failed");
+        setMessage(
+          data.error ||
+          data.detail ||
+          data.raw ||
+          `Upload failed with status ${res.status}`
+        );
         return;
       }
 
-      setMessage(`Saved job ${data.job.id} for ${data.job.original_name}`);
+      setMessage(
+        `Saved job ${data.job.id} for ${data.job.original_name}${
+          data.download_path ? ` | Ready: ${data.download_path}` : ""
+        }`
+      );
+
       window.location.reload();
-    } catch {
-      setMessage("Something went wrong");
+    } catch (error: any) {
+      setMessage(error?.message || "Network or server error");
     } finally {
       setIsUploading(false);
     }
@@ -38,13 +55,18 @@ export function UploadForm() {
       <p>Send a file into your workflow and create a real tracked job.</p>
 
       <label className="label" htmlFor="file">PDF file</label>
-      <input id="file" name="file" type="file" accept="application/pdf" className="file-input" required />
+      <input
+        id="file"
+        name="file"
+        type="file"
+        accept="application/pdf"
+        className="file-input"
+        required
+      />
 
       <label className="label" htmlFor="preset">Processing preset</label>
       <select id="preset" name="preset" className="select" defaultValue="booklet">
         <option value="booklet">Booklet</option>
-        <option value="4-up">4-up Imposition</option>
-        <option value="8-up">8-up Imposition</option>
         <option value="numbering">Numbering / Bates</option>
         <option value="watermark">Watermark</option>
       </select>
