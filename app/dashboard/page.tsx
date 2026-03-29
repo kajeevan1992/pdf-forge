@@ -11,6 +11,7 @@ export default function DashboardPage() {
   return (
     <>
       <Navbar />
+
       <main className="dashboard-wrap">
         <div className="container">
           <div className="page-head">
@@ -23,6 +24,7 @@ export default function DashboardPage() {
 
           <div className="dashboard-grid">
             <UploadForm />
+
             <div className="card">
               <h2>Roadmap</h2>
               <ol className="roadmap">
@@ -37,6 +39,7 @@ export default function DashboardPage() {
 
           <div className="card" style={{ marginTop: 20 }}>
             <h2>Recent Jobs</h2>
+
             {jobs.length === 0 ? (
               <p className="empty">No jobs uploaded yet.</p>
             ) : (
@@ -50,6 +53,7 @@ export default function DashboardPage() {
                       <th>Preset</th>
                       <th>Status</th>
                       <th>Created</th>
+                      <th>Download</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -59,8 +63,25 @@ export default function DashboardPage() {
                         <td>{job.original_name}</td>
                         <td>{job.filename}</td>
                         <td>{job.preset}</td>
-                        <td><span className="badge">{job.status}</span></td>
+                        <td>
+                          <span className="badge">{job.status}</span>
+                        </td>
                         <td>{new Date(job.created_at).toLocaleString()}</td>
+                        <td>
+                          {job.download_url ? (
+                            <a
+                              href={job.download_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn btn-secondary"
+                              style={{ padding: "8px 12px", display: "inline-block" }}
+                            >
+                              Download
+                            </a>
+                          ) : (
+                            <span className="empty">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
