@@ -76,13 +76,18 @@ export async function POST(request: Request) {
       );
     }
 
+    const downloadUrl = engineData.download_path
+      ? `${engineUrl}${engineData.download_path}`
+      : null;
+
     const job = {
       id: makeJobId(),
       filename: engineData.output_filename || "unknown.pdf",
       original_name: engineData.original_filename || file.name,
       preset,
       status: "Complete",
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      download_url: downloadUrl
     };
 
     insertJob(job);
@@ -90,10 +95,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      job,
-      download_path: engineData.download_path
-        ? `${engineUrl}${engineData.download_path}`
-        : null
+      job
     });
   } catch (error: any) {
     return NextResponse.json(
