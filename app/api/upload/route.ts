@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import fs from "fs";
-import path from "path";
 import { insertJob } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -23,29 +21,56 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
   }
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
+  const engineUrl = process.env.PDF_ENGINE_URL;
 
-  const uploadDir = path.join(process.cwd(), "uploads");
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+  if (!engineUrl) {
+    return NextResponse.json(
+      { error: "PDF_ENGINE_URL is not configured" },
+      { status: 500 }
+    );
   }
 
-  const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-  const filePath = path.join(uploadDir, safeName);
-  fs.writeFileSync(filePath, buffer);
+  const engineForm = new FormData();
+  engineForm.append("file", file);
+  engineForm.append("mode", preset === "watermark" ? "watermark" : preset === "numbering" ? "numbering" : "booklet");
+
+  if (preset === "watermark") {
+    engineForm.append("watermark_text", "SAMPLE");
+  }
+
+  if (preset === "numbering") {
+    engineForm.append("number_position", "bottom-center");
+  }
+
+  const engineResponse = await fetch(`${engineUrl}/process`, {
+    method: "POST",
+    body: engineForm
+  });
+
+  const engineData = await engineResponse.json();
+
+  if (!engineResponse.ok) {
+    return NextResponse.json(
+      { error: engineData.detail || engineData.error || "Engine processing failed" },
+      { status: 500 }
+    );
+  }
 
   const job = {
     id: makeJobId(),
-    filename: safeName,
-    original_name: file.name,
+    filename: engineData.output_filename,
+    original_name: engineData.original_filename,
     preset,
-    status: "Queued",
+    status: "Complete",
     created_at: new Date().toISOString()
   };
 
   insertJob(job);
   revalidatePath("/dashboard");
 
-  return NextResponse.json({ success: true, job });
+  return NextResponse.json({
+    success: true,
+    job,
+    download_path: `${engineUrl}${engineData.download_path}`
+  });
 }
